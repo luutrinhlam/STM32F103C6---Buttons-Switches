@@ -12,9 +12,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 void setTimerBlink(int duration);
 void setTimerTrafficHorizontal(int duration);
+void setTimerTrafficVertical(int duration);
 void setTimerLED7(int duration);
 
+
 extern int timerTrafficHorizontal_flag;
+extern int timerTrafficVertical_flag;
 extern int timerBlink_flag;
 extern int timerLED7_flag;
 

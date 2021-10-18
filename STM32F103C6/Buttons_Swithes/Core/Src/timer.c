@@ -24,6 +24,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 int timerTrafficHorizontal_counter = 0;
 int timerTrafficHorizontal_flag = 1;
 
+int timerTrafficVertical_counter = 0;
+int timerTrafficVertical_flag = 1;
+
 int timerBlink_counter = 0;
 int timerBlink_flag = 1;
 
@@ -33,6 +36,11 @@ int timerLED7_flag = 1;
 void setTimerTrafficHorizontal(int duration) {
 	timerTrafficHorizontal_counter = duration / TIMER_CYCLE;
 	timerTrafficHorizontal_flag = 0;
+}
+
+void setTimerTrafficVertical(int duration) {
+	timerTrafficVertical_counter = duration / TIMER_CYCLE;
+	timerTrafficVertical_flag = 0;
 }
 
 void setTimerBlink(int duration) {
@@ -50,6 +58,11 @@ void timer_run() {
 		timerTrafficHorizontal_counter--;
 		if (timerTrafficHorizontal_counter == 0)
 			timerTrafficHorizontal_flag = 1;
+	}
+	if (timerTrafficVertical_counter > 0) {
+		timerTrafficVertical_counter--;
+		if (timerTrafficVertical_counter == 0)
+			timerTrafficVertical_flag = 1;
 	}
 	if (timerBlink_counter > 0) {
 		timerBlink_counter--;

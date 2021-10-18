@@ -125,7 +125,8 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		fsm_for_input_processing();
+		fsm_for_button_processing();
+		fsm_for_mode_processing();
 
 	}
 	/* USER CODE END 3 */
