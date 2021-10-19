@@ -406,7 +406,7 @@ void resetAll_MODE1() {
 	AMBER_counter_horizontal = lightPeriod[AMBER];
 	GREEN_counter_horizontal = lightPeriod[GREEN];
 
-	lightStateHorizontal = GREEN;
+	lightStateVertical = GREEN;
 	RED_counter_vertical = lightPeriod[RED];
 	AMBER_counter_vertical= lightPeriod[AMBER];
 	GREEN_counter_vertical= lightPeriod[GREEN];
