@@ -14,6 +14,7 @@ void setTimerBlink(int duration);
 void setTimerTrafficHorizontal(int duration);
 void setTimerTrafficVertical(int duration);
 void setTimerLED7(int duration);
+void timer_run();
 
 
 extern int timerTrafficHorizontal_flag;

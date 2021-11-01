@@ -14,12 +14,7 @@ void timer_run();
 //our clock configured cycle
 int TIMER_CYCLE = 10;
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == TIM2) {
-		button_reading();
-		timer_run();
-	}
-}
+
 
 int timerTrafficHorizontal_counter = 0;
 int timerTrafficHorizontal_flag = 1;

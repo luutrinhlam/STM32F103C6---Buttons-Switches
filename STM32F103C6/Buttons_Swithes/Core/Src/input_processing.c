@@ -63,19 +63,16 @@ enum lightStateHorizontal lightStateVertical = GREEN;
 enum Mode mode = MODE_1;
 
 // VARIABLE FOR TRAFFIC LIGHT STATE AND INITIALIZE TO REALEASED
-enum ButtonState buttonState[N0_OF_BUTTON] = { RELEASED, RELEASED, RELEASED,
-		RELEASED };
+enum ButtonState buttonState[N0_OF_BUTTON] = { RELEASED, RELEASED, RELEASED,RELEASED };
 
-// output of fsm for button
+// output of FSM for button
 static int buttonIsPressedAndReleased[N0_OF_BUTTON];
 
 // light period of active
-static uint8_t lightPeriod[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,
-INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
+static uint8_t lightPeriod[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
 
 // buffer for displaying the changing value before confirming in MODE_2, MODE_3, MODE_4
-int light_period_modify_buffer[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,
-INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
+int light_period_modify_buffer[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
 
 int RED_counter_horizontal = INITIAL_RED_PERIOD;
 int AMBER_counter_horizontal = INITIAL_AMBER_PERIOD;
@@ -86,6 +83,19 @@ int AMBER_counter_vertical = INITIAL_AMBER_PERIOD;
 int GREEN_counter_vertical = INITIAL_GREEN_PERIOD;
 
 int LED7_buffer[] = { 0, 0, 0, 0 };
+uint8_t led7_number[10] = { 0x40, //0
+		0xf9, //1
+		0x24, //2
+		0x30, //3
+		0x99, //4
+		0x12, //5
+		0x82, //6
+		0xF8, //7
+		0x80, //8
+		0x90 //9
+		};
+// index for display 4 led7 by timer
+int LED7_index = N0_OF_LED_7_SEGMENT;
 
 void fsm_for_button_processing(void) {
 	for (int index = 0; index < N0_OF_BUTTON; index++) {
@@ -128,6 +138,9 @@ void clear_all_light(void) {
 // for mode 2, 3, 4
 void prepare_for_modified_mode(int index) {
 	clear_all_light();
+	for(int i = 0 ; i < N0_OF_BUTTON; i++){
+		buttonIsPressedAndReleased[i] = 0;
+	}
 	light_period_modify_buffer[index] = lightPeriod[index];
 	update_LED7_buffer_vertical(index + 2); // display the mode
 	update_LED7_buffer_horizontal(light_period_modify_buffer[index]);
@@ -176,17 +189,6 @@ void fsm_for_mode_processing(void) {
 	}
 }
 
-uint8_t led7_number[10] = { 0x40, //0
-		0xf9, //1
-		0x24, //2
-		0x30, //3
-		0x99, //4
-		0x12, //5
-		0x82, //6
-		0xF8, //7
-		0x80, //8
-		0x90 //9
-		};
 void display7SEG(int num) {
 	uint8_t code = led7_number[num];
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, ((code >> 0) & 0x01));
@@ -197,9 +199,6 @@ void display7SEG(int num) {
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, ((code >> 5) & 0x01));
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, ((code >> 6) & 0x01));
 }
-
-// index for display 4 led7 by timner
-int LED7_index = N0_OF_LED_7_SEGMENT;
 
 void update_7seg_led() {
 	if (timerLED7_flag) {
@@ -376,6 +375,7 @@ void blinkingLight(uint8_t light) {
 		}
 	}
 }
+
 void updateLightPeriod(uint8_t light) {
 	if (is_button_pressed_and_released(1)) {
 		if (light_period_modify_buffer[light] == 99)
