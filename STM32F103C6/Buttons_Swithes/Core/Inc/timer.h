@@ -8,8 +8,6 @@
 #ifndef INC_TIMER_H_
 #define INC_TIMER_H_
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-
 void setTimerBlink(int duration);
 void setTimerTrafficHorizontal(int duration);
 void setTimerTrafficVertical(int duration);
