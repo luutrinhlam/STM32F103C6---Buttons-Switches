@@ -14,7 +14,8 @@ void timer_run();
 //our clock configured cycle
 int TIMER_CYCLE = 10;
 
-
+int timerTimeOut_counter = 0;
+int timerTimeOut_flag = 1;
 
 int timerTrafficHorizontal_counter = 0;
 int timerTrafficHorizontal_flag = 1;
@@ -27,6 +28,11 @@ int timerBlink_flag = 1;
 
 int timerLED7_counter = 0;
 int timerLED7_flag = 1;
+
+void setTimerTimeOut(int duration) {
+	timerTimeOut_counter = duration / TIMER_CYCLE;
+	timerTimeOut_flag = 0;
+}
 
 void setTimerTrafficHorizontal(int duration) {
 	timerTrafficHorizontal_counter = duration / TIMER_CYCLE;
@@ -68,5 +74,10 @@ void timer_run() {
 		timerLED7_counter--;
 		if (timerLED7_counter == 0)
 			timerLED7_flag = 1;
+	}
+	if (timerTimeOut_counter > 0) {
+		timerTimeOut_counter--;
+		if (timerTimeOut_counter == 0)
+			timerTimeOut_flag = 1;
 	}
 }

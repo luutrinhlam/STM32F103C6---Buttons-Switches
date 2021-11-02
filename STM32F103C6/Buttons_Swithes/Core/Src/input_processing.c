@@ -22,20 +22,22 @@
 // for MODE 2,3,4
 #define LED_BLINKING_FREQUENCY = 2000
 
-// Initial period ò light
+// Initial period of light
 #define INITIAL_RED_PERIOD 5
 #define INITIAL_AMBER_PERIOD 2
 #define INITIAL_GREEN_PERIOD 3
 
+int is_button_pressed_and_released(int index);
+void clear_all_light(void);
+void prepare_for_modified_mode(int index);
 void displayTrafficLight();
 void updateLightPeriod(uint8_t light);
-
-void resetAll_MODE1();
+void prepare_for_DISPLAY();
 void blinkingLight(uint8_t light);
 
 // STATES OF FSM
 enum Mode {
-	MODE_1, MODE_2, MODE_3, MODE_4
+	DISPLAY, RED_DURATION_MODIFY, AMBER_DURATION_MODIFY, GREEN_DURATION_MODIFY
 };
 
 // STATES OF LIGHT
@@ -53,19 +55,22 @@ enum lightStateHorizontal lightStateHorizontal = RED;
 enum lightStateHorizontal lightStateVertical = GREEN;
 
 // VARIABLE FOR FSM STATE AND INITIALIZE TO MODE 1
-enum Mode mode = MODE_1;
+enum Mode mode = DISPLAY;
 
 // VARIABLE FOR TRAFFIC LIGHT STATE AND INITIALIZE TO REALEASED
-enum ButtonState buttonState[N0_OF_BUTTON] = { RELEASED, RELEASED, RELEASED,RELEASED };
+enum ButtonState buttonState[N0_OF_BUTTON] = { RELEASED, RELEASED, RELEASED,
+		RELEASED };
 
 // output of FSM for button
 static int buttonIsPressedAndReleased[N0_OF_BUTTON];
 
 // light period of active
-static uint8_t lightPeriod[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
+static uint8_t lightPeriod[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,
+		INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
 
-// buffer for displaying the changing value before confirming in MODE_2, MODE_3, MODE_4
-int light_period_modify_buffer[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
+// buffer for displaying the changing value before confirming in RED_DURATION_MODIFY, AMBER_DURATION_MODIFY, GREEN_DURATION_MODIFY
+int light_period_modify_buffer[N0_OF_LIGHTS] = { INITIAL_RED_PERIOD,
+		INITIAL_AMBER_PERIOD, INITIAL_GREEN_PERIOD };
 
 int RED_counter_horizontal = INITIAL_RED_PERIOD;
 int AMBER_counter_horizontal = INITIAL_AMBER_PERIOD;
@@ -74,8 +79,6 @@ int GREEN_counter_horizontal = INITIAL_GREEN_PERIOD;
 int RED_counter_vertical = INITIAL_RED_PERIOD;
 int AMBER_counter_vertical = INITIAL_AMBER_PERIOD;
 int GREEN_counter_vertical = INITIAL_GREEN_PERIOD;
-
-
 
 void fsm_for_button_processing(void) {
 	for (int index = 0; index < N0_OF_BUTTON; index++) {
@@ -96,6 +99,67 @@ void fsm_for_button_processing(void) {
 	}
 }
 
+void fsm_for_mode_processing(void) {
+	update_7seg_led();
+	switch (mode) {
+	case DISPLAY:
+		if (is_button_pressed_and_released(0)) {
+			mode = RED_DURATION_MODIFY;
+			prepare_for_modified_mode(RED);
+			setTimerTimeOut(10000);	// after 10s doing nothing, turn our machine to display normally
+		} else {
+			displayTrafficLight();
+		}
+		break;
+
+	case RED_DURATION_MODIFY:
+		if (is_button_pressed_and_released(0)) {
+			mode = AMBER_DURATION_MODIFY;
+			prepare_for_modified_mode(AMBER);
+			setTimerTimeOut(10000);
+		} else {
+			blinkingLight(RED);
+			updateLightPeriod(RED);
+		}
+		if (timerTimeOut_flag == 1) {
+			mode = DISPLAY;
+			prepare_for_DISPLAY();
+		}
+		break;
+
+	case AMBER_DURATION_MODIFY:
+		if (is_button_pressed_and_released(0)) {
+			mode = GREEN_DURATION_MODIFY;
+			prepare_for_modified_mode(GREEN);
+			setTimerTimeOut(10000);
+		} else {
+			blinkingLight(AMBER);
+			updateLightPeriod(AMBER);
+		}
+		if (timerTimeOut_flag == 1) {
+			mode = DISPLAY;
+			prepare_for_DISPLAY();
+		}
+		break;
+
+	case GREEN_DURATION_MODIFY:
+		if (is_button_pressed_and_released(0)) {
+			mode = DISPLAY;
+			prepare_for_DISPLAY();
+			setTimerTimeOut(10000);
+		} else {
+			blinkingLight(GREEN);
+			updateLightPeriod(GREEN);
+		}
+		if (timerTimeOut_flag == 1) {
+			mode = DISPLAY;
+			prepare_for_DISPLAY();
+		}
+		break;
+	}
+}
+
+//check the flag if a single button has just been pressed and released
 int is_button_pressed_and_released(int index) {
 	if (index >= N0_OF_BUTTON)
 		return 0;
@@ -106,6 +170,7 @@ int is_button_pressed_and_released(int index) {
 		return 0;
 }
 
+//clear all traffic light - turn off all
 void clear_all_light(void) {
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, SET);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, SET);
@@ -118,60 +183,15 @@ void clear_all_light(void) {
 // for mode 2, 3, 4
 void prepare_for_modified_mode(int index) {
 	clear_all_light();
-	for(int i = 0 ; i < N0_OF_BUTTON; i++){
+	for (int i = 0; i < N0_OF_BUTTON; i++) {
 		buttonIsPressedAndReleased[i] = 0;
 	}
 	light_period_modify_buffer[index] = lightPeriod[index];
 	update_LED7_buffer_vertical(index + 2); // display the mode
 	update_LED7_buffer_horizontal(light_period_modify_buffer[index]);
 }
-void fsm_for_mode_processing(void) {
-	update_7seg_led();
-	switch (mode) {
-	case MODE_1:
-		if (is_button_pressed_and_released(0)) {
-			mode = MODE_2;
-			prepare_for_modified_mode(RED);
-		} else {
-			displayTrafficLight();
-		}
-		break;
 
-	case MODE_2:
-		if (is_button_pressed_and_released(0)) {
-			mode = MODE_3;
-			prepare_for_modified_mode(AMBER);
-		} else {
-			blinkingLight(RED);
-			updateLightPeriod(RED);
-		}
-		break;
-
-	case MODE_3:
-		if (is_button_pressed_and_released(0)) {
-			mode = MODE_4;
-			prepare_for_modified_mode(GREEN);
-		} else {
-			blinkingLight(AMBER);
-			updateLightPeriod(AMBER);
-		}
-		break;
-
-	case MODE_4:
-		if (is_button_pressed_and_released(0)) {
-			mode = MODE_1;
-			resetAll_MODE1();
-		} else {
-			blinkingLight(GREEN);
-			updateLightPeriod(GREEN);
-		}
-		break;
-	}
-}
-
-
-
-
+// display traffic light in DISPLAY Mode, using an FSM to control RED,AMBER,GREEN states by timer interrupt
 void displayTrafficLight() {
 	switch (lightStateHorizontal) {
 	case RED:
@@ -294,6 +314,9 @@ void displayTrafficLight() {
 		break;
 	}
 }
+
+// Blinking 1 type of traffic light
+// Use in 3 Duration Modify mode
 void blinkingLight(uint8_t light) {
 	if (timerBlink_flag == 1) {
 		switch (light) {
@@ -318,8 +341,10 @@ void blinkingLight(uint8_t light) {
 	}
 }
 
+// Function of SET button to set the require duration for 1 traffic light
 void updateLightPeriod(uint8_t light) {
 	if (is_button_pressed_and_released(1)) {
+		setTimerTimeOut(10000);
 		if (light_period_modify_buffer[light] == 99)
 			light_period_modify_buffer[light] = 1;
 		else
@@ -328,6 +353,7 @@ void updateLightPeriod(uint8_t light) {
 	}
 
 	if (is_button_pressed_and_released(2)) {
+		setTimerTimeOut(10000);
 		if (light_period_modify_buffer[light] == 1)
 			light_period_modify_buffer[light] = 99;
 		else
@@ -337,12 +363,16 @@ void updateLightPeriod(uint8_t light) {
 	}
 
 	if (is_button_pressed_and_released(3)) {
+		setTimerTimeOut(10000);
 		lightPeriod[light] = light_period_modify_buffer[light];
 		HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_7);
 	}
 }
 
-void resetAll_MODE1() {
+// preparing to transfer from Mode modify GREEN to mode display
+void prepare_for_DISPLAY() {
+	// handle different situation of modified duration, to get the consistency of 2 road
+
 	lightStateHorizontal = RED;
 	RED_counter_horizontal = lightPeriod[RED];
 	AMBER_counter_horizontal = lightPeriod[AMBER];
@@ -350,10 +380,11 @@ void resetAll_MODE1() {
 
 	lightStateVertical = GREEN;
 	RED_counter_vertical = lightPeriod[RED];
-	AMBER_counter_vertical= lightPeriod[AMBER];
-	GREEN_counter_vertical= lightPeriod[GREEN];
+	AMBER_counter_vertical = lightPeriod[AMBER];
+	GREEN_counter_vertical = lightPeriod[GREEN];
 
 	clear_all_light();
+
 
 	timerTrafficHorizontal_flag = 1;
 	timerTrafficVertical_flag = 1;
